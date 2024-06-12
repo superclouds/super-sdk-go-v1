@@ -58,6 +58,7 @@ import (
     "log"
 
     "github.com/superclouds/super-sdk-go-v1/superclouds"
+    "github.com/superclouds/super-sdk-go-v1/superclouds/users"
 )
 
 func main() {
@@ -76,10 +77,10 @@ func main() {
     //     log.Fatalf("Failed to create config: %v", err)
     // }
 
-    usersClient := superclouds.NewUsersClient(cfg)
+    usersClient := users.NewUsersClient(cfg)
 
     // Create User
-    newUser, err := usersClient.CreateUser(context.TODO(), &superclouds.CreateUserInput{
+    newUser, err := usersClient.CreateUser(context.TODO(), &users.CreateUserInput{
         Email: "new.user@example.com",
     })
     if err != nil {
@@ -94,7 +95,7 @@ func main() {
 #### Creating a User
 
 ```go
-newUser, err := usersClient.CreateUser(context.TODO(), &superclouds.CreateUserInput{
+newUser, err := usersClient.CreateUser(context.TODO(), &users.CreateUserInput{
     Email: "new.user@example.com",
 })
 if err != nil {
@@ -106,7 +107,7 @@ log.Printf("Created User: %v", newUser)
 #### Listing Users
 
 ```go
-usersOutput, err := usersClient.ListUsers(context.TODO(), &superclouds.ListUsersInput{
+usersOutput, err := usersClient.ListUsers(context.TODO(), &users.ListUsersInput{
     Size:       10,
     Page:       1,
     SearchTerm: "search_term",
@@ -120,7 +121,7 @@ log.Printf("Users: %v", usersOutput.Users)
 #### Deleting a User
 
 ```go
-err = usersClient.DeleteUser(context.TODO(), &superclouds.DeleteUserInput{
+err = usersClient.DeleteUser(context.TODO(), &users.DeleteUserInput{
     Email: "delete.user@example.com",
 })
 if err != nil {
@@ -132,7 +133,7 @@ log.Println("Deleted User")
 #### Updating a User
 
 ```go
-updatedUser, err := usersClient.UpdateUser(context.TODO(), &superclouds.UpdateUserInput{
+updatedUser, err := usersClient.UpdateUser(context.TODO(), &users.UpdateUserInput{
     FirstName: "John",
     LastName:  "Doe",
     Contact:   "999XXXX999",
@@ -166,7 +167,7 @@ log.Printf("Available Roles: %v", roles)
 #### Updating User Role
 
 ```go
-err = usersClient.UpdateUserRole(context.TODO(), &superclouds.UpdateUserRoleInput{
+err = usersClient.UpdateUserRole(context.TODO(), &users.UpdateUserRoleInput{
     Email: "user@example.com",
     Role:  "MODIFY",
 })
@@ -179,7 +180,7 @@ log.Println("Updated User Role")
 #### Changing Password
 
 ```go
-err = usersClient.ChangePassword(context.TODO(), &superclouds.ChangePasswordInput{
+err = usersClient.ChangePassword(context.TODO(), &users.ChangePasswordInput{
     CurrentPassword: "oldpassword",
     NewPassword:     "newpassword",
     ConfirmPassword: "newpassword",
