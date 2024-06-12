@@ -10,7 +10,7 @@ The Superclouds SDK for Go provides a convenient way to interact with the Superc
 To get started, install the Superclouds SDK for Go using `go get`:
 
 ```sh
-go get github.com/yourusername/superclouds
+go get github.com/superclouds/super-sdk-go-v1/superclouds
 ```
 
 ### Configuration
@@ -57,7 +57,7 @@ import (
     "context"
     "log"
 
-    "github.com/yourusername/superclouds"
+    "github.com/superclouds/super-sdk-go-v1/superclouds"
 )
 
 func main() {
