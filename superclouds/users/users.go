@@ -123,6 +123,10 @@ type ChangePasswordInput struct {
 //	}
 //	log.Printf("Users: %v", usersOutput.Users)
 func (c *UsersClient) ListUsers(ctx context.Context, input *ListUsersInput) (*ListUsersOutput, error) {
+	if input == nil {
+		input = &ListUsersInput{}
+	}
+
 	baseURL, err := url.Parse(c.config.SuperURL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid base URL: %v", err)
@@ -160,7 +164,7 @@ func (c *UsersClient) ListUsers(ctx context.Context, input *ListUsersInput) (*Li
 
 	var apiResponse SuperAPIResponse
 	if err := json.NewDecoder(resp.Body).Decode(&apiResponse); err != nil {
-		return nil, fmt.Errorf("error decoding the response: %v", err)
+		return nil, fmt.Errorf("error decoding response: %v", err)
 	}
 
 	return &ListUsersOutput{
