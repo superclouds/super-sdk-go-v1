@@ -160,7 +160,7 @@ func (c *UsersClient) ListUsers(ctx context.Context, input *ListUsersInput) (*Li
 
 	var apiResponse SuperAPIResponse
 	if err := json.NewDecoder(resp.Body).Decode(&apiResponse); err != nil {
-		return nil, fmt.Errorf("error decoding response: %v", err)
+		return nil, fmt.Errorf("error decoding the response: %v", err)
 	}
 
 	return &ListUsersOutput{
