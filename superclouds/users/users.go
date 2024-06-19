@@ -51,13 +51,23 @@ type ListUsersOutput struct {
 	Users []User `json:"data"`
 }
 
+type Role uint
+
+const (
+	READ Role = 1 << iota
+	MODIFY
+	MANAGE
+	EXECUTE
+	SUPER
+)
+
 // User represents a user in the Superclouds system.
 type User struct {
 	Id        string `json:"id"`
 	Email     string `json:"email"`
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
-	Role      string `json:"role"`
+	Role      Role   `json:"role"`
 }
 
 // CreateUserInput defines the input parameters for the CreateUser method.
@@ -82,11 +92,6 @@ type UserOutput struct {
 	ID    string `json:"id"`
 	Email string `json:"email"`
 	// Add more fields as needed
-}
-
-// ListRolesOutput defines the output structure for the ListRoles method.
-type ListRolesOutput struct {
-	Roles []string `json:"roles"`
 }
 
 // UpdateUserRoleInput defines the input parameters for the UpdateUserRole method.
@@ -169,7 +174,7 @@ func (c *UsersClient) ListUsers(ctx context.Context, input *ListUsersInput) (*Li
 	}
 
 	return &ListUsersOutput{
-		Users: apiResponse.Data,
+		Users: apiResponse.Data.([]User),
 	}, nil
 }
 
@@ -335,7 +340,7 @@ func (c *UsersClient) UpdateUser(ctx context.Context, input *UpdateUserInput) (*
 //	    log.Fatalf("Failed to get user: %v", err)
 //	}
 //	log.Printf("Authenticated User: %v", user)
-func (c *UsersClient) GetUser(ctx context.Context) (*UserOutput, error) {
+func (c *UsersClient) GetUser(ctx context.Context) (*User, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/user", c.config.SuperURL), nil)
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %v", err)
@@ -356,64 +361,9 @@ func (c *UsersClient) GetUser(ctx context.Context) (*UserOutput, error) {
 	if err := json.NewDecoder(resp.Body).Decode(&apiResponse); err != nil {
 		return nil, fmt.Errorf("error decoding response: %v", err)
 	}
+	user := apiResponse.Data.(User)
 
-	if len(apiResponse.Data) == 0 {
-		return nil, fmt.Errorf("no user data found in response")
-	}
-
-	return &UserOutput{
-		ID:    apiResponse.Data[0].Id,
-		Email: apiResponse.Data[0].Email,
-		// Add more fields as needed
-	}, nil
-}
-
-// ListRoles retrieves a list of available roles within the system.
-//
-// Parameters:
-// - ctx: The context for the request.
-//
-// Returns:
-// - ListRolesOutput: The list of roles.
-// - error: Any error encountered during the request.
-//
-// Example usage:
-//
-//	roles, err := usersClient.ListRoles(context.TODO())
-//	if err != nil {
-//	    log.Fatalf("Failed to list roles: %v", err)
-//	}
-//	log.Printf("Available Roles: %v", roles)
-func (c *UsersClient) ListRoles(ctx context.Context) (*ListRolesOutput, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/users/roles", c.config.SuperURL), nil)
-	if err != nil {
-		return nil, fmt.Errorf("error creating request: %v", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	if c.config.SuperToken != "" {
-		req.Header.Set("Authorization", "Bearer "+c.config.SuperToken)
-	}
-
-	resp, err := c.config.Client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("error executing request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	var apiResponse SuperAPIResponse
-	if err := json.NewDecoder(resp.Body).Decode(&apiResponse); err != nil {
-		return nil, fmt.Errorf("error decoding response: %v", err)
-	}
-
-	var roles []string
-	for _, user := range apiResponse.Data {
-		roles = append(roles, user.Role)
-	}
-
-	return &ListRolesOutput{
-		Roles: roles,
-	}, nil
+	return &user, nil
 }
 
 // UpdateUserRole updates the role of a user within the organization.
