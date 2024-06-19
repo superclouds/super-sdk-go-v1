@@ -26,6 +26,17 @@ func NewUsersClient(cfg *superclouds.Config) *UsersClient {
 	return &UsersClient{config: cfg}
 }
 
+// SuperAPIResponse represents the structure of the response from the Superclouds API.
+type SuperAPIResponse struct {
+	Data    []User `json:"data"`
+	Message string `json:"message"`
+	Page    int    `json:"page"`
+	Pages   int    `json:"pages"`
+	Size    int    `json:"size"`
+	Status  int    `json:"status"`
+	Total   int    `json:"total"`
+}
+
 // ListUsersInput defines the input parameters for the ListUsers method.
 type ListUsersInput struct {
 	Size       int    `json:"size"`
@@ -35,14 +46,16 @@ type ListUsersInput struct {
 
 // ListUsersOutput defines the output structure for the ListUsers method.
 type ListUsersOutput struct {
-	Users []User `json:"users"`
+	Users []User `json:"data"`
 }
 
 // User represents a user in the Superclouds system.
 type User struct {
-	ID    string `json:"id"`
-	Email string `json:"email"`
-	// Add more fields as needed
+	Id        string `json:"id"`
+	Email     string `json:"email"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Role      string `json:"role"`
 }
 
 // CreateUserInput defines the input parameters for the CreateUser method.
@@ -99,7 +112,7 @@ type ChangePasswordInput struct {
 //
 // Example usage:
 //
-//	usersOutput, err := usersClient.ListUsers(context.TODO(), &superclouds.ListUsersInput{
+//	usersOutput, err := usersClient.ListUsers(context.TODO(), &users.ListUsersInput{
 //	    Size: 10,
 //	    Page: 1,
 //	    SearchTerm: "search_term",
@@ -125,12 +138,14 @@ func (c *UsersClient) ListUsers(ctx context.Context, input *ListUsersInput) (*Li
 	}
 	defer resp.Body.Close()
 
-	var output ListUsersOutput
-	if err := json.NewDecoder(resp.Body).Decode(&output); err != nil {
+	var apiResponse SuperAPIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiResponse); err != nil {
 		return nil, fmt.Errorf("error decoding response: %v", err)
 	}
 
-	return &output, nil
+	return &ListUsersOutput{
+		Users: apiResponse.Data,
+	}, nil
 }
 
 // CreateUser creates a new user within the organization.
@@ -145,7 +160,7 @@ func (c *UsersClient) ListUsers(ctx context.Context, input *ListUsersInput) (*Li
 //
 // Example usage:
 //
-//	newUser, err := usersClient.CreateUser(context.TODO(), &superclouds.CreateUserInput{
+//	newUser, err := usersClient.CreateUser(context.TODO(), &users.CreateUserInput{
 //	    Email: "new.user@example.com",
 //	})
 //	if err != nil {
@@ -193,7 +208,7 @@ func (c *UsersClient) CreateUser(ctx context.Context, input *CreateUserInput) (*
 //
 // Example usage:
 //
-//	err := usersClient.DeleteUser(context.TODO(), &superclouds.DeleteUserInput{
+//	err := usersClient.DeleteUser(context.TODO(), &users.DeleteUserInput{
 //	    Email: "delete.user@example.com",
 //	})
 //	if err != nil {
@@ -236,7 +251,7 @@ func (c *UsersClient) DeleteUser(ctx context.Context, input *DeleteUserInput) er
 //
 // Example usage:
 //
-//	updatedUser, err := usersClient.UpdateUser(context.TODO(), &superclouds.UpdateUserInput{
+//	updatedUser, err := usersClient.UpdateUser(context.TODO(), &users.UpdateUserInput{
 //	    FirstName: "John",
 //	    LastName:  "Doe",
 //	    Contact:   "999XXXX999",
@@ -368,7 +383,7 @@ func (c *UsersClient) ListRoles(ctx context.Context) (*ListRolesOutput, error) {
 //
 // Example usage:
 //
-//	err := usersClient.UpdateUserRole(context.TODO(), &superclouds.UpdateUserRoleInput{
+//	err := usersClient.UpdateUserRole(context.TODO(), &users.UpdateUserRoleInput{
 //	    Email: "user@example.com",
 //	    Role:  "MODIFY",
 //	})
@@ -416,7 +431,7 @@ func (c *UsersClient) UpdateUserRole(ctx context.Context, input *UpdateUserRoleI
 //
 // Example usage:
 //
-//	err := usersClient.ChangePassword(context.TODO(), &superclouds.ChangePasswordInput{
+//	err := usersClient.ChangePassword(context.TODO(), &users.ChangePasswordInput{
 //	    CurrentPassword: "oldpassword",
 //	    NewPassword:     "newpassword",
 //	    ConfirmPassword: "newpassword",

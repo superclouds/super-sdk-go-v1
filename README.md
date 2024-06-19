@@ -92,7 +92,7 @@ func main() {
 }
 ```
 
-#### Creating a User
+#### Example : Creating a User
 
 ```go
 newUser, err := usersClient.CreateUser(context.TODO(), &users.CreateUserInput{
@@ -104,7 +104,7 @@ if err != nil {
 log.Printf("Created User: %v", newUser)
 ```
 
-#### Listing Users
+#### Example : Listing Users
 
 ```go
 usersOutput, err := usersClient.ListUsers(context.TODO(), &users.ListUsersInput{
