@@ -29,14 +29,14 @@ func NewUsersClient(cfg *superclouds.Config) *UsersClient {
 
 // SuperAPIResponse represents the structure of the response from the Superclouds API.
 type SuperAPIResponse struct {
-	Data    []User   `json:"data"`
-	Status  int      `json:"status"`
-	Message string   `json:"message"`
-	Errors  []string `json:"errors"`
-	Page    int      `json:"page"`
-	Pages   int      `json:"pages"`
-	Size    int      `json:"size"`
-	Total   int      `json:"total"`
+	Data    interface{} `json:"data"`
+	Status  int         `json:"status"`
+	Message string      `json:"message"`
+	Errors  []string    `json:"errors"`
+	Page    int         `json:"page"`
+	Pages   int         `json:"pages"`
+	Size    int         `json:"size"`
+	Total   int         `json:"total"`
 }
 
 // ListUsersInput defines the input parameters for the ListUsers method.
