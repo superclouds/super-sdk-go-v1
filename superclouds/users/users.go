@@ -29,13 +29,14 @@ func NewUsersClient(cfg *superclouds.Config) *UsersClient {
 
 // SuperAPIResponse represents the structure of the response from the Superclouds API.
 type SuperAPIResponse struct {
-	Data    []User `json:"data"`
-	Message string `json:"message"`
-	Page    int    `json:"page"`
-	Pages   int    `json:"pages"`
-	Size    int    `json:"size"`
-	Status  int    `json:"status"`
-	Total   int    `json:"total"`
+	Data    []User   `json:"data"`
+	Status  int      `json:"status"`
+	Message string   `json:"message"`
+	Errors  []string `json:"errors"`
+	Page    int      `json:"page"`
+	Pages   int      `json:"pages"`
+	Size    int      `json:"size"`
+	Total   int      `json:"total"`
 }
 
 // ListUsersInput defines the input parameters for the ListUsers method.
@@ -191,7 +192,7 @@ func (c *UsersClient) ListUsers(ctx context.Context, input *ListUsersInput) (*Li
 //	    log.Fatalf("Failed to create user: %v", err)
 //	}
 //	log.Printf("Created User: %v", newUser)
-func (c *UsersClient) CreateUser(ctx context.Context, input *CreateUserInput) (*UserOutput, error) {
+func (c *UsersClient) CreateUser(ctx context.Context, input *CreateUserInput) (*SuperAPIResponse, error) {
 	reqBody, err := json.Marshal(input)
 	if err != nil {
 		return nil, fmt.Errorf("error marshaling JSON: %v", err)
@@ -213,12 +214,16 @@ func (c *UsersClient) CreateUser(ctx context.Context, input *CreateUserInput) (*
 	}
 	defer resp.Body.Close()
 
-	var output UserOutput
-	if err := json.NewDecoder(resp.Body).Decode(&output); err != nil {
+	var apiResponse SuperAPIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiResponse); err != nil {
 		return nil, fmt.Errorf("error decoding response: %v", err)
 	}
 
-	return &output, nil
+	if apiResponse.Status != 1 {
+		return nil, fmt.Errorf("error creating user: %v", apiResponse.Message)
+	}
+
+	return &apiResponse, nil
 }
 
 // DeleteUser removes a user from the organization.
@@ -347,12 +352,20 @@ func (c *UsersClient) GetUser(ctx context.Context) (*UserOutput, error) {
 	}
 	defer resp.Body.Close()
 
-	var output UserOutput
-	if err := json.NewDecoder(resp.Body).Decode(&output); err != nil {
+	var apiResponse SuperAPIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiResponse); err != nil {
 		return nil, fmt.Errorf("error decoding response: %v", err)
 	}
 
-	return &output, nil
+	if len(apiResponse.Data) == 0 {
+		return nil, fmt.Errorf("no user data found in response")
+	}
+
+	return &UserOutput{
+		ID:    apiResponse.Data[0].Id,
+		Email: apiResponse.Data[0].Email,
+		// Add more fields as needed
+	}, nil
 }
 
 // ListRoles retrieves a list of available roles within the system.
@@ -388,12 +401,19 @@ func (c *UsersClient) ListRoles(ctx context.Context) (*ListRolesOutput, error) {
 	}
 	defer resp.Body.Close()
 
-	var output ListRolesOutput
-	if err := json.NewDecoder(resp.Body).Decode(&output); err != nil {
+	var apiResponse SuperAPIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiResponse); err != nil {
 		return nil, fmt.Errorf("error decoding response: %v", err)
 	}
 
-	return &output, nil
+	var roles []string
+	for _, user := range apiResponse.Data {
+		roles = append(roles, user.Role)
+	}
+
+	return &ListRolesOutput{
+		Roles: roles,
+	}, nil
 }
 
 // UpdateUserRole updates the role of a user within the organization.
