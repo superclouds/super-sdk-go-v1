@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/superclouds/super-sdk-go-v1/superclouds"
 	"net/http"
+	"net/url"
 )
 
 // UsersClient provides methods to interact with the users endpoint of the Superclouds API.
@@ -58,48 +59,6 @@ type User struct {
 	Role      string `json:"role"`
 }
 
-// CreateUserInput defines the input parameters for the CreateUser method.
-type CreateUserInput struct {
-	Email string `json:"email"`
-}
-
-// DeleteUserInput defines the input parameters for the DeleteUser method.
-type DeleteUserInput struct {
-	Email string `json:"email"`
-}
-
-// UpdateUserInput defines the input parameters for the UpdateUser method.
-type UpdateUserInput struct {
-	FirstName string `json:"first_name,omitempty"`
-	LastName  string `json:"last_name,omitempty"`
-	Contact   string `json:"contact,omitempty"`
-}
-
-// UserOutput defines the output structure for user-related methods.
-type UserOutput struct {
-	ID    string `json:"id"`
-	Email string `json:"email"`
-	// Add more fields as needed
-}
-
-// ListRolesOutput defines the output structure for the ListRoles method.
-type ListRolesOutput struct {
-	Roles []string `json:"roles"`
-}
-
-// UpdateUserRoleInput defines the input parameters for the UpdateUserRole method.
-type UpdateUserRoleInput struct {
-	Email string `json:"email"`
-	Role  string `json:"role"`
-}
-
-// ChangePasswordInput defines the input parameters for the ChangePassword method.
-type ChangePasswordInput struct {
-	CurrentPassword string `json:"current_password"`
-	NewPassword     string `json:"password"`
-	ConfirmPassword string `json:"confirm_password"`
-}
-
 // ListUsers retrieves a paginated list of users.
 //
 // Parameters:
@@ -122,7 +81,26 @@ type ChangePasswordInput struct {
 //	}
 //	log.Printf("Users: %v", usersOutput.Users)
 func (c *UsersClient) ListUsers(ctx context.Context, input *ListUsersInput) (*ListUsersOutput, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/users?size=%d&page=%d&s=%s", c.config.SuperURL, input.Size, input.Page, input.SearchTerm), nil)
+	baseURL, err := url.Parse(c.config.SuperURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid base URL: %v", err)
+	}
+
+	baseURL.Path += "/users"
+
+	params := url.Values{}
+	if input.Size > 0 {
+		params.Add("size", fmt.Sprintf("%d", input.Size))
+	}
+	if input.Page > 0 {
+		params.Add("page", fmt.Sprintf("%d", input.Page))
+	}
+	if input.SearchTerm != "" {
+		params.Add("s", input.SearchTerm)
+	}
+	baseURL.RawQuery = params.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, baseURL.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %v", err)
 	}
